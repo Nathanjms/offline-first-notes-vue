@@ -13,6 +13,25 @@ export default defineConfig({
       devOptions: {
         enabled: true,
       },
+      includeAssets: ["favicon.ico", "apple-touch-icon.png"],
+      manifest: {
+        name: "Offline Notes App",
+        short_name: "NJAPP",
+        description: "My Awesome App description",
+        theme_color: "#ffffff",
+        icons: [
+          {
+            src: "NJ.png",
+            sizes: "192x192",
+            type: "image/png",
+          },
+          {
+            src: "NJ.png",
+            sizes: "512x512",
+            type: "image/png",
+          },
+        ],
+      },
     }),
   ],
   resolve: {
