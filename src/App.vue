@@ -25,7 +25,11 @@ export default {
   data() {
     return {
       editor: null,
+      database: null,
     };
+  },
+  async created() {
+    this.database = await this.getDatabase();
   },
   mounted() {
     this.editor = new Editor({
@@ -40,6 +44,25 @@ export default {
   },
   beforeUnmount() {
     this.editor.destroy();
+  },
+  methods: {
+    async getDatabase() {
+      return new Promise((resolve, reject) => {
+        let db = window.indexedDB.open("notes");
+        db.onerror = () => {
+          reject("Error opening the database");
+        };
+        db.onsuccess = (e) => {
+          console.log("onsuccess", e);
+          resolve(e.target.result);
+        };
+        db.onupgradeneeded = (e) => {
+          // Pass in/provide schema changes.
+          console.log("onupgradeneeded", e);
+          e.target.result.createObjectStore("notes");
+        };
+      });
+    },
   },
 };
 </script>
