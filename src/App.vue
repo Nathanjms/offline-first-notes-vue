@@ -140,9 +140,6 @@ export default {
       });
     },
     async saveNote() {
-      if (!Object.keys(this.activeNote).length) {
-        await this.createNewNote();
-      }
       return new Promise((resolve, reject) => {
         let noteStore = this.database
           .transaction("notes", "readwrite")
@@ -215,9 +212,10 @@ export default {
       this.editor.commands.setContent("");
       // Then show list of notes
     },
-    addNewNote() {
+    async addNewNote() {
       this.activeNote = {};
       this.editor.commands.setContent("");
+      await this.createNewNote();
     },
   },
 };
