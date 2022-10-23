@@ -35,6 +35,7 @@
           <a
             @click.prevent="openNote(note)"
             class="flex items-center h-8 text-sm pl-8 pr-3"
+            :class="activeNote.created === note.created ? 'bg-gray-300' : ''"
             href="#"
             v-for="note in notes"
             :key="note.created"
@@ -46,8 +47,10 @@
         </div>
       </div>
     </div>
-    <div class="flex flex-col flex-grow">
-      <!-- Main Content -->
+    <div
+      v-if="Object.keys(this.activeNote).length"
+      class="flex flex-col flex-grow"
+    >
       <div class="flex flex-col flex-grow overflow-auto">
         <editor-content :editor="editor" />
       </div>
@@ -58,6 +61,21 @@
         >
           Save Note
         </button>
+      </div>
+    </div>
+    <div v-else class="flex flex-col flex-grow">
+      <div v-for="note in notes" :key="note.created">
+        <div class="flex p-4 pt-3">
+          <div class="prose my-2 mx-auto">
+            <div>
+              <span class="ml-1 text-xs text-gray-500"
+                >Created on {{ new Date(note.created).toLocaleString() }}</span
+              >
+            </div>
+            <div v-html="note.content"></div>
+          </div>
+        </div>
+        <hr class="w-full" />
       </div>
     </div>
   </div>
@@ -122,9 +140,42 @@ export default {
       });
     },
     async saveNote() {
-      if (Object.keys(this.activeNote).length) {
-        console.log("update instead");
+      if (!Object.keys(this.activeNote).length) {
+        await this.createNewNote();
       }
+      return new Promise((resolve, reject) => {
+        let noteStore = this.database
+          .transaction("notes", "readwrite")
+          .objectStore("notes");
+        let noteRequest = noteStore.get(this.activeNote.created);
+
+        noteRequest.onerror = () => {
+          reject("Error getting note from DB.");
+        };
+
+        noteRequest.onsuccess = (e) => {
+          let note = e.target.result;
+          note.content = this.editor.getHTML();
+
+          let updateRequest = noteStore.put(note);
+
+          updateRequest.onerror = () => {
+            reject("Error saving note to DB.");
+          };
+
+          updateRequest.onsuccess = () => {
+            let noteIndex = this.notes.findIndex(
+              (x) => x.created == note.created
+            );
+            if (noteIndex) {
+              this.notes[noteIndex] = note;
+            }
+            resolve();
+          };
+        };
+      });
+    },
+    async createNewNote() {
       return new Promise((resolve) => {
         let transaction = this.database.transaction("notes", "readwrite");
         transaction.oncomplete = () => {
@@ -140,6 +191,7 @@ export default {
         };
 
         this.notes.unshift(note);
+        this.activeNote = note;
         transaction.objectStore("notes").add(note);
       });
     },
@@ -157,6 +209,11 @@ export default {
     openNote(note) {
       this.activeNote = note;
       this.editor.commands.setContent(note.content);
+    },
+    showAllNotes() {
+      this.activeNote = {};
+      this.editor.commands.setContent("");
+      // Then show list of notes
     },
     addNewNote() {
       this.activeNote = {};
