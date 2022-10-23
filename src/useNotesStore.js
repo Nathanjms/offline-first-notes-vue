@@ -101,5 +101,8 @@ export const useNotesStore = defineStore("notes", {
     initEditor(editorConfig) {
       this.editor = editorConfig;
     },
+    setIsOffline(is) {
+      this.isOffline = is;
+    },
   },
 });

@@ -1,7 +1,7 @@
 <template>
   <div class="flex w-screen h-screen text-gray-700">
     <div
-      v-if="isOffline"
+      v-if="notesStore.isOffline"
       class="w-full absolute top-0 left-0 z-10 opacity-75 text-center py-2 bg-red-300 border-b border-red-500 text-red-700"
     >
       Sorry, it looks like you're offline.
@@ -35,18 +35,13 @@ export default {
     EditorComponent,
     NoteListComponent,
   },
-  data() {
-    return {
-      isOffline: !navigator.onLine,
-    };
-  },
   mounted() {
     window.addEventListener("offline", () => {
-      this.isOffline = true;
+      this.notesStore.setIsOffline(true);
     });
     window.addEventListener("online", () => {
-      this.isOffline = false;
-      // sync up a user's data with an external api
+      this.notesStore.setIsOffline(false);
+      // eg. sync up a user's data with an external api
       this.syncUserData();
     });
     this.notesStore.init();
@@ -64,7 +59,7 @@ export default {
   },
   methods: {
     syncUserData() {
-      if (this.isOffline) {
+      if (this.notesStore.isOffline) {
         return;
       }
       // make my api request to an external server
