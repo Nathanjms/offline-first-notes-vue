@@ -1,6 +1,12 @@
 <template>
   <div class="flex w-screen h-screen text-gray-700">
     <div
+      v-if="isOffline"
+      class="w-full absolute top-0 left-0 z-10 opacity-75 text-center py-2 bg-red-300 border-b border-red-500 text-red-700"
+    >
+      Sorry, it looks like you're offline.
+    </div>
+    <div
       class="flex flex-col flex-shrink-0 w-64 border-r border-gray-300 bg-gray-100"
     >
       <!-- Sidebar -->
@@ -95,6 +101,7 @@ export default {
       database: null,
       notes: [],
       activeNote: {},
+      isOffline: !navigator.onLine,
     };
   },
   async created() {
@@ -111,6 +118,15 @@ export default {
           class: "prose my-6 mx-auto focus:outline-none",
         },
       },
+    });
+
+    window.addEventListener("offline", () => {
+      this.isOffline = true;
+    });
+    window.addEventListener("online", () => {
+      this.isOffline = false;
+      // sync up a user's data with an external api
+      this.syncUserData();
     });
   },
   beforeUnmount() {
@@ -216,6 +232,12 @@ export default {
       this.activeNote = {};
       this.editor.commands.setContent("");
       await this.createNewNote();
+    },
+    syncUserData() {
+      if (this.isOffline) {
+        return;
+      }
+      // make my api request to an external server
     },
   },
 };
